@@ -86,14 +86,14 @@
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 25);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(306, 100);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(498, 39);
             this.flowLayoutPanel1.TabIndex = 5;
             // 
             // button5
             // 
             this.button5.AutoSize = true;
             this.button5.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.button5.Location = new System.Drawing.Point(3, 32);
+            this.button5.Location = new System.Drawing.Point(277, 3);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(88, 23);
             this.button5.TabIndex = 5;
@@ -106,9 +106,9 @@
             this.flowLayoutPanel2.AutoSize = true;
             this.flowLayoutPanel2.Controls.Add(this.webBrowser1);
             this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(0, 125);
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(0, 64);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(306, 393);
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(498, 243);
             this.flowLayoutPanel2.TabIndex = 6;
             // 
             // webBrowser1
@@ -116,14 +116,14 @@
             this.webBrowser1.Location = new System.Drawing.Point(3, 3);
             this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
             this.webBrowser1.Name = "webBrowser1";
-            this.webBrowser1.Size = new System.Drawing.Size(300, 387);
+            this.webBrowser1.Size = new System.Drawing.Size(492, 238);
             this.webBrowser1.TabIndex = 0;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(306, 523);
+            this.ClientSize = new System.Drawing.Size(498, 312);
             this.Controls.Add(this.flowLayoutPanel2);
             this.Controls.Add(this.flowLayoutPanel1);
             this.Name = "Form1";

@@ -23,6 +23,7 @@ using System.Web;
 using HtmlAgilityPack;
 using System.Security.Cryptography;
 using System.Collections.Specialized;
+using System.Configuration;
 
 namespace end_of_day
 {
@@ -597,7 +598,9 @@ namespace end_of_day
         public void sendPost(String postData) {
             //step 1 talk with site
             WebRequest req = WebRequest.Create("http://adultpleasures.xxx/quick_look.php");
-            string MainPostData = "username=jeremyBass&pass=b@ss!32456";
+            String username = ConfigurationManager.AppSettings["restConStr_username"];
+            String pass = ConfigurationManager.AppSettings["restConStr_pass"];
+            string MainPostData = "username=" + username + "&pass=" + pass;
 
             byte[] send = Encoding.Default.GetBytes(MainPostData + (!String.IsNullOrWhiteSpace(postData) ? "&" + postData.TrimStart('&') : ""));
             req.Method = "POST";
