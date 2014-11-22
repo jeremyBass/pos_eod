@@ -25,27 +25,22 @@ using System.Security.Cryptography;
 using System.Collections.Specialized;
 using System.Configuration;
 
-namespace end_of_day
-{
+namespace end_of_day {
 
 
 
 
 
-    public partial class Form1 : Form
-    {
+    public partial class Form1 : Form {
 
         //private add_customer_form childForm = new add_customer_form(this);
 
-        public Form1()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-            {
+        public Form1() {
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
                 string resourceName = new AssemblyName(args.Name).Name + ".dll";
                 string resource = Array.Find(this.GetType().Assembly.GetManifestResourceNames(), element => element.EndsWith(resourceName));
 
-                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource))
-                {
+                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource)) {
                     Byte[] assemblyData = new Byte[stream.Length];
                     stream.Read(assemblyData, 0, assemblyData.Length);
                     return Assembly.Load(assemblyData);
@@ -71,36 +66,35 @@ namespace end_of_day
 
         private const int cGrip = 16;      // Grip size 
         private const int cCaption = 25;   // Caption bar height; 
- 
-        protected override void OnPaint(PaintEventArgs e) { 
-          //System.Drawing.Rectangle rc = new System.Drawing.Rectangle(this.ClientSize.Width - cGrip, this.ClientSize.Height - cGrip, cGrip, cGrip); 
-          //ControlPaint.DrawSizeGrip(e.Graphics, this.BackColor, rc); 
-          //rc = new System.Drawing.Rectangle(0, 0, this.ClientSize.Width, 32); 
-          //e.Graphics.FillRectangle(Brushes.DarkBlue, rc); 
-        } 
- 
-        protected override void WndProc(ref Message m) { 
-          if (m.Msg == 0x84) {  // Trap WM_NCHITTEST 
-            Point pos = new Point(m.LParam.ToInt32() & 0xffff, m.LParam.ToInt32() >> 16); 
-            pos = this.PointToClient(pos); 
-            if (pos.Y < cCaption) { 
-              m.Result = (IntPtr)2;  // HTCAPTION 
-              return; 
-            } 
-            if (pos.X >= this.ClientSize.Width - cGrip && pos.Y >= this.ClientSize.Height - cGrip) { 
-              m.Result = (IntPtr)17; // HTBOTTOMRIGHT 
-              return; 
-            } 
-          } 
-          base.WndProc(ref m); 
-        } 
-      
+
+        protected override void OnPaint(PaintEventArgs e) {
+            //System.Drawing.Rectangle rc = new System.Drawing.Rectangle(this.ClientSize.Width - cGrip, this.ClientSize.Height - cGrip, cGrip, cGrip); 
+            //ControlPaint.DrawSizeGrip(e.Graphics, this.BackColor, rc); 
+            //rc = new System.Drawing.Rectangle(0, 0, this.ClientSize.Width, 32); 
+            //e.Graphics.FillRectangle(Brushes.DarkBlue, rc); 
+        }
+
+        protected override void WndProc(ref Message m) {
+            if (m.Msg == 0x84) {  // Trap WM_NCHITTEST 
+                Point pos = new Point(m.LParam.ToInt32() & 0xffff, m.LParam.ToInt32() >> 16);
+                pos = this.PointToClient(pos);
+                if (pos.Y < cCaption) {
+                    m.Result = (IntPtr)2;  // HTCAPTION 
+                    return;
+                }
+                if (pos.X >= this.ClientSize.Width - cGrip && pos.Y >= this.ClientSize.Height - cGrip) {
+                    m.Result = (IntPtr)17; // HTBOTTOMRIGHT 
+                    return;
+                }
+            }
+            base.WndProc(ref m);
+        }
 
 
 
 
-        private void button4_Click(object sender, EventArgs e)
-        {
+
+        private void button4_Click(object sender, EventArgs e) {
             SqlConnection myConnection = quries.create_concection();
 
             DialogResult dlgRes = MessageBox.Show("Exculde Videos?",
@@ -109,14 +103,12 @@ namespace end_of_day
                  MessageBoxIcon.Question);
 
             String SQL_op = "";
-            if (dlgRes == DialogResult.Yes)
-            {
+            if (dlgRes == DialogResult.Yes) {
                 SQL_op = " AND NOT Dept_ID = 'video'";
             }
 
             String mess = "done";
-            try
-            {
+            try {
                 //This is the absolute path to the PDF that we will create 
 
                 iTextSharp.text.Font fontTinyReg = FontFactory.GetFont("Arial", 6, iTextSharp.text.Font.NORMAL, BaseColor.BLACK);
@@ -130,14 +122,11 @@ namespace end_of_day
                 string outputFile = @"outofstock_" + date + ".pdf";//Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Sample.pdf"); 
                 int i = 0;
                 //Create a standard .Net FileStream for the file, setting various flags 
-                using (FileStream fs = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
+                using (FileStream fs = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.None)) {
                     //Create a new PDF document setting the size to A4 
-                    using (Document doc = new Document(PageSize.A8))
-                    {
+                    using (Document doc = new Document(PageSize.A8)) {
                         //Bind the PDF document to the FileStream using an iTextSharp PdfWriter 
-                        using (PdfWriter w = PdfWriter.GetInstance(doc, fs))
-                        {
+                        using (PdfWriter w = PdfWriter.GetInstance(doc, fs)) {
                             //Open the document for writing 
                             doc.Open();
                             doc.SetMargins(0f, 0f, 0f, 0f);
@@ -172,16 +161,14 @@ namespace end_of_day
                             List<string[]> list = new List<string[]>();
 
 
-                            while (myReader.Read())
-                            {
+                            while (myReader.Read()) {
                                 list.Add(new string[] { myReader["Dept_ID"].ToString().ToUpper(), myReader["Description"].ToString() });
                             }
                             myReader.Close();
 
                             i = 0;
                             int all_count = 0;
-                            foreach (string[] item in list)
-                            {
+                            foreach (string[] item in list) {
 
                                 PdfPCell cell = new PdfPCell(new Paragraph(item[1].ToString(), header));
                                 cell.BackgroundColor = BaseColor.BLACK;
@@ -195,8 +182,7 @@ namespace end_of_day
 
                                 int stock_count = 0;
                                 int j = 0;
-                                while (myReader.Read())
-                                {
+                                while (myReader.Read()) {
                                     theCell = new PdfPCell(new Paragraph(myReader["ItemName"].ToString(), fontTinyReg));
                                     t.AddCell(theCell);
                                     theCell = new PdfPCell(new Paragraph(myReader["Vendor_Part_Num"].ToString(), fontTinyBold));
@@ -246,7 +232,7 @@ namespace end_of_day
                  MessageBoxIcon.Question);
 
 
-                if (dlgRes == DialogResult.Yes) {                
+                if (dlgRes == DialogResult.Yes) {
                     MailMessage theMailMessage = new MailMessage("jeremybass26@gmail.com", "jeremybass@cableone.net");
                     theMailMessage.Body = "body email message here \r\n MESSAGE \r\n" + mess;
 
@@ -274,9 +260,7 @@ namespace end_of_day
 
 
 
-            }
-            catch (Exception er)
-            {
+            } catch (Exception er) {
 
                 dlgRes = MessageBox.Show(er.ToString(), "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
@@ -284,8 +268,7 @@ namespace end_of_day
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
+        private void button3_Click(object sender, EventArgs e) {
             SqlConnection myConnection = quries.create_concection();
 
             DialogResult dlgRes = MessageBox.Show("Exculde Videos?",
@@ -294,14 +277,12 @@ namespace end_of_day
                  MessageBoxIcon.Question);
 
             String SQL_op = "";
-            if (dlgRes == DialogResult.Yes)
-            {
+            if (dlgRes == DialogResult.Yes) {
                 SQL_op = " AND NOT Dept_ID = 'video'";
             }
 
             String mess = "done";
-            try
-            {
+            try {
                 //This is the absolute path to the PDF that we will create 
 
                 iTextSharp.text.Font fontTinyReg = FontFactory.GetFont("Arial", 6, iTextSharp.text.Font.NORMAL, BaseColor.BLACK);
@@ -315,14 +296,11 @@ namespace end_of_day
                 string outputFile = @"instock_" + date + ".pdf";//Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Sample.pdf"); 
                 int i = 0;
                 //Create a standard .Net FileStream for the file, setting various flags 
-                using (FileStream fs = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
+                using (FileStream fs = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.None)) {
                     //Create a new PDF document setting the size to A4 
-                    using (Document doc = new Document(PageSize.A8))
-                    {
+                    using (Document doc = new Document(PageSize.A8)) {
                         //Bind the PDF document to the FileStream using an iTextSharp PdfWriter 
-                        using (PdfWriter w = PdfWriter.GetInstance(doc, fs))
-                        {
+                        using (PdfWriter w = PdfWriter.GetInstance(doc, fs)) {
                             //Open the document for writing 
                             doc.Open();
                             doc.SetMargins(0f, 0f, 0f, 0f);
@@ -357,57 +335,55 @@ namespace end_of_day
                             List<string[]> list = new List<string[]>();
 
 
-                            while (myReader.Read())
-                            {
+                            while (myReader.Read()) {
                                 list.Add(new string[] { myReader["Dept_ID"].ToString().ToUpper(), myReader["Description"].ToString() });
                             }
                             myReader.Close();
 
                             i = 0;
                             int all_count = 0;
-                            foreach (string[] item in list)
-                            {
-                               
-                                    myCommand = new SqlCommand("SELECT ItemName,In_Stock,Vendor_Part_Num FROM Inventory WHERE In_Stock>0 AND IsDeleted = 'False' AND Dept_ID = '" + item[0] + "' ORDER BY Last_Sold",
-                                                                             myConnection);
-                                    myReader = myCommand.ExecuteReader();
+                            foreach (string[] item in list) {
 
-                                    PdfPCell cell = new PdfPCell(new Paragraph(item[1].ToString(), header));
-                                    cell.BackgroundColor = BaseColor.BLACK;
-                                    cell.Colspan = 3;
-                                    cell.HorizontalAlignment = 1; //0=Left, 1=Centre, 2=Right
-                                    t.AddCell(cell);
+                                myCommand = new SqlCommand("SELECT ItemName,In_Stock,Vendor_Part_Num FROM Inventory WHERE In_Stock>0 AND IsDeleted = 'False' AND Dept_ID = '" + item[0] + "' ORDER BY Last_Sold",
+                                                                         myConnection);
+                                myReader = myCommand.ExecuteReader();
 
-                                    int stock_count = 0;
-                                    int j = 0;
-                                    while (myReader.Read()) {
-                                        theCell = new PdfPCell(new Paragraph(myReader["ItemName"].ToString(), fontTinyReg));
-                                        t.AddCell(theCell);
-                                        theCell = new PdfPCell(new Paragraph(myReader["Vendor_Part_Num"].ToString(), fontTinyBold));
-                                        t.AddCell(theCell);
-                                        theCell = new PdfPCell(new Paragraph(myReader["In_Stock"].ToString(), fontTinyReg));
-                                        t.AddCell(theCell);
+                                PdfPCell cell = new PdfPCell(new Paragraph(item[1].ToString(), header));
+                                cell.BackgroundColor = BaseColor.BLACK;
+                                cell.Colspan = 3;
+                                cell.HorizontalAlignment = 1; //0=Left, 1=Centre, 2=Right
+                                t.AddCell(cell);
 
-                                         try {
-                                            stock_count = stock_count + int.Parse(myReader["In_Stock"].ToString());
-                                         } catch (Exception er) {
-                                             string count_er_mess = "This item " + myReader["ItemName"].ToString() + " has a qty that is not correct.  Write this down sku (" + myReader["Vendor_Part_Num"].ToString() + ") and address it before starting the inventory " + myReader["In_Stock"].ToString() + "\r\rSKU: " + myReader["Vendor_Part_Num"].ToString() + "\rStock:" + myReader["In_Stock"].ToString();
-                                             dlgRes = MessageBox.Show(count_er_mess + "\r\r\r [" + er.ToString() + "]", "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-                                         }
-                                        j++;
-                                        i++;
+                                int stock_count = 0;
+                                int j = 0;
+                                while (myReader.Read()) {
+                                    theCell = new PdfPCell(new Paragraph(myReader["ItemName"].ToString(), fontTinyReg));
+                                    t.AddCell(theCell);
+                                    theCell = new PdfPCell(new Paragraph(myReader["Vendor_Part_Num"].ToString(), fontTinyBold));
+                                    t.AddCell(theCell);
+                                    theCell = new PdfPCell(new Paragraph(myReader["In_Stock"].ToString(), fontTinyReg));
+                                    t.AddCell(theCell);
+
+                                    try {
+                                        stock_count = stock_count + int.Parse(myReader["In_Stock"].ToString());
+                                    } catch (Exception er) {
+                                        string count_er_mess = "This item " + myReader["ItemName"].ToString() + " has a qty that is not correct.  Write this down sku (" + myReader["Vendor_Part_Num"].ToString() + ") and address it before starting the inventory " + myReader["In_Stock"].ToString() + "\r\rSKU: " + myReader["Vendor_Part_Num"].ToString() + "\rStock:" + myReader["In_Stock"].ToString();
+                                        dlgRes = MessageBox.Show(count_er_mess + "\r\r\r [" + er.ToString() + "]", "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                                     }
-                                    myReader.Close();
+                                    j++;
+                                    i++;
+                                }
+                                myReader.Close();
 
-                                    cell = new PdfPCell(new Paragraph("Totals (products:" + j + ") --  " + stock_count + " items", header));
-                                    cell.BackgroundColor = BaseColor.GRAY;
-                                    cell.Colspan = 3;
-                                    cell.HorizontalAlignment = 1; //0=Left, 1=Centre, 2=Right
-                                    t.AddCell(cell);
+                                cell = new PdfPCell(new Paragraph("Totals (products:" + j + ") --  " + stock_count + " items", header));
+                                cell.BackgroundColor = BaseColor.GRAY;
+                                cell.Colspan = 3;
+                                cell.HorizontalAlignment = 1; //0=Left, 1=Centre, 2=Right
+                                t.AddCell(cell);
 
-                                    all_count = all_count + stock_count;
+                                all_count = all_count + stock_count;
 
-                            } 
+                            }
 
 
                             PdfPCell fcell = new PdfPCell(new Paragraph("Totals (products:" + i + ") --  " + all_count + " items", header));
@@ -452,7 +428,9 @@ namespace end_of_day
                     theClient.EnableSsl = true;
                     theClient.UseDefaultCredentials = false;
                     theClient.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    theClient.Credentials = new System.Net.NetworkCredential("jeremybass26@gmail.com", "bA03s17s82!");
+                    String username = ConfigurationManager.AppSettings["email_username"];
+                    String pass = ConfigurationManager.AppSettings["email_pass"];
+                    theClient.Credentials = new System.Net.NetworkCredential(username, pass);
                     theClient.Send(theMailMessage);
                 }
 
@@ -470,9 +448,7 @@ namespace end_of_day
 
 
 
-            }
-            catch (Exception er)
-            {
+            } catch (Exception er) {
 
                 dlgRes = MessageBox.Show(er.ToString(), "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
 
@@ -480,8 +456,7 @@ namespace end_of_day
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
+        private void button2_Click(object sender, EventArgs e) {
             SqlConnection myConnection = quries.create_concection();
             //images/small/
             SqlDataReader myReader = null;
@@ -493,8 +468,7 @@ namespace end_of_day
                  MessageBoxIcon.Question);
 
             String SQL_op = "";
-            if (dlgRes == DialogResult.Yes)
-            {
+            if (dlgRes == DialogResult.Yes) {
                 SQL_op = "AND NOT Dept_ID = 'video'";
             }
             SqlCommand myCommand = new SqlCommand("SELECT Vendor_Part_Num,Picture FROM Inventory",
@@ -502,37 +476,32 @@ namespace end_of_day
             myReader = myCommand.ExecuteReader();
             List<string[]> list = new List<string[]>();
 
-            
-            while (myReader.Read())
-            {
+
+            while (myReader.Read()) {
                 list.Add(new string[] { myReader["Vendor_Part_Num"].ToString().ToUpper(), myReader["Picture"].ToString() });
             }
             myReader.Close();
 
 
             int i = 0;
-            foreach (string[] item in list)
-            {
+            foreach (string[] item in list) {
                 String SKU = item[0].ToString().ToUpper();
 
-                if (String.IsNullOrWhiteSpace(item[1].ToString()) && !String.IsNullOrWhiteSpace(SKU))
-                {
+                if (String.IsNullOrWhiteSpace(item[1].ToString()) && !String.IsNullOrWhiteSpace(SKU)) {
                     string destination = "ftp://aphrodite.eldorado.net/images/small/";
 
-                    string file = SKU+ ".jpg";
+                    string file = SKU + ".jpg";
                     string extention = Path.GetExtension(file);
                     string fileName = file.Remove(file.Length - extention.Length);
                     string fileNameCopy = fileName;
 
-                    if(CheckFileExists(GetRequest(destination + "//" + fileNameCopy + extention)))
-                    {
+                    if (CheckFileExists(GetRequest(destination + "//" + fileNameCopy + extention))) {
                         var filePath = "ftp://aphrodite.eldorado.net/images/small/" + SKU + ".jpg";
                         var request = WebRequest.Create(filePath);
                         request.Credentials = new NetworkCredential("39Ple", "428ure");
                         using (var response = request.GetResponse())
                         using (var stream = response.GetResponseStream())
-                        using (var img = System.Drawing.Image.FromStream(stream))
-                        {
+                        using (var img = System.Drawing.Image.FromStream(stream)) {
                             string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                             String local_file = path + "\\product_imgs\\" + SKU + ".jpg";
                             img.Save(local_file, ImageFormat.Jpeg);
@@ -545,8 +514,7 @@ namespace end_of_day
             }
         }
 
-        private static FtpWebRequest GetRequest(string uriString)
-        {
+        private static FtpWebRequest GetRequest(string uriString) {
             var request = (FtpWebRequest)WebRequest.Create(uriString);
             request.Credentials = new NetworkCredential("39Ple", "428ure");
             request.Method = WebRequestMethods.Ftp.GetFileSize;
@@ -554,29 +522,21 @@ namespace end_of_day
             return request;
         }
 
-        private static bool CheckFileExists(FtpWebRequest request)
-        {
-            try
-            {
+        private static bool CheckFileExists(FtpWebRequest request) {
+            try {
                 FtpWebResponse response = (FtpWebResponse)request.GetResponse();
                 return true;
-            }
-            catch (WebException ex)
-            {
+            } catch (WebException ex) {
                 FtpWebResponse response = (FtpWebResponse)ex.Response;
-                if (response.StatusCode == FtpStatusCode.ActionNotTakenFileUnavailable)
-                {
+                if (response.StatusCode == FtpStatusCode.ActionNotTakenFileUnavailable) {
                     return false;
-                }
-                else
-                {
+                } else {
                     return false;
                 }
             }
         }
 
-        private void button5_Click(object sender, EventArgs e)
-        {
+        private void button5_Click(object sender, EventArgs e) {
             DialogResult dlgRes = MessageBox.Show("add user?",
                  "Options",
                 MessageBoxButtons.YesNoCancel,
