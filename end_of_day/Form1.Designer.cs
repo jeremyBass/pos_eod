@@ -30,7 +30,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.button3 = new System.Windows.Forms.Button();
+            this.stocklist = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
@@ -41,17 +41,17 @@
             this.flowLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
-            // button3
+            // stocklist
             // 
-            this.button3.AutoSize = true;
-            this.button3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.button3.Location = new System.Drawing.Point(190, 3);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(81, 23);
-            this.button3.TabIndex = 3;
-            this.button3.Text = "Print In Stock";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.stocklist.AutoSize = true;
+            this.stocklist.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.stocklist.Location = new System.Drawing.Point(190, 3);
+            this.stocklist.Name = "stocklist";
+            this.stocklist.Size = new System.Drawing.Size(81, 23);
+            this.stocklist.TabIndex = 3;
+            this.stocklist.Text = "Print In Stock";
+            this.stocklist.UseVisualStyleBackColor = true;
+            this.stocklist.Click += new System.EventHandler(this.stocklist_Click);
             // 
             // button2
             // 
@@ -81,7 +81,7 @@
             // 
             this.flowLayoutPanel1.Controls.Add(this.button4);
             this.flowLayoutPanel1.Controls.Add(this.button2);
-            this.flowLayoutPanel1.Controls.Add(this.button3);
+            this.flowLayoutPanel1.Controls.Add(this.stocklist);
             this.flowLayoutPanel1.Controls.Add(this.button5);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 25);
@@ -139,7 +139,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button stocklist;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;

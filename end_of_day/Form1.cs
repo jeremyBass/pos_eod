@@ -95,8 +95,6 @@ namespace end_of_day {
 
 
         private void button4_Click(object sender, EventArgs e) {
-            SqlConnection myConnection = quries.create_concection();
-
             DialogResult dlgRes = MessageBox.Show("Exculde Videos?",
                  "Options",
                 MessageBoxButtons.YesNoCancel,
@@ -107,170 +105,15 @@ namespace end_of_day {
                 SQL_op = " AND NOT Dept_ID = 'video'";
             }
 
-            String mess = "done";
-            try {
-                //This is the absolute path to the PDF that we will create 
+            String item_filter = "In_Stock<1 AND IsDeleted = 'False'";
 
-                iTextSharp.text.Font fontTinyReg = FontFactory.GetFont("Arial", 6, iTextSharp.text.Font.NORMAL, BaseColor.BLACK);
-                iTextSharp.text.Font fontTinyBold = FontFactory.GetFont("Arial", 6, iTextSharp.text.Font.BOLD, BaseColor.BLACK);
-                iTextSharp.text.Font header = FontFactory.GetFont("Arial", 7, iTextSharp.text.Font.BOLD, BaseColor.WHITE);
+            String date = DateTime.Now.ToShortDateString().Replace('\\', '-').Replace('/', '-');
+            string outputFile = @"outofstock_" + date + ".pdf";
 
-                BaseFont bfTimes = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, false);
-
-                iTextSharp.text.Font times = new iTextSharp.text.Font(bfTimes, 8);
-                String date = DateTime.Now.ToShortDateString().Replace('\\', '-').Replace('/', '-');
-                string outputFile = @"outofstock_" + date + ".pdf";//Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Sample.pdf"); 
-                int i = 0;
-                //Create a standard .Net FileStream for the file, setting various flags 
-                using (FileStream fs = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.None)) {
-                    //Create a new PDF document setting the size to A4 
-                    using (Document doc = new Document(PageSize.A8)) {
-                        //Bind the PDF document to the FileStream using an iTextSharp PdfWriter 
-                        using (PdfWriter w = PdfWriter.GetInstance(doc, fs)) {
-                            //Open the document for writing 
-                            doc.Open();
-                            doc.SetMargins(0f, 0f, 0f, 0f);
-                            doc.SetMarginMirroring(false);
-
-                            //Create a table with two columns 
-                            PdfPTable t = new PdfPTable(3);
-                            t.WidthPercentage = 100;
-                            //fix the absolute width of the table
-                            //t.LockedWidth = true;
-                            var colWidthPercentages = new[] { 60f, 30f, 10f };
-                            t.SetWidths(colWidthPercentages);
-
-                            t.HorizontalAlignment = 0;
-                            t.SkipFirstHeader = true;
-                            //Borders are drawn by the individual cells, not the table itself. 
-                            //Tell the default cell that we do not want a border drawn 
-                            t.DefaultCell.Border = 1;
-                            t.DefaultCell.Phrase = new Phrase() { Font = times };
-
-                            PdfPCell theCell = new PdfPCell(new Paragraph("name", fontTinyBold));
-                            t.AddCell(theCell);
-                            theCell = new PdfPCell(new Paragraph("sku", fontTinyBold));
-                            t.AddCell(theCell);
-                            theCell = new PdfPCell(new Paragraph("stock", fontTinyBold));
-                            t.AddCell(theCell);
-
-                            SqlDataReader myReader = null;
-                            SqlCommand myCommand = new SqlCommand("SELECT Dept_ID,Description FROM Departments WHERE NOT Dept_ID = 'discount' " + SQL_op + "",
-                                         myConnection);
-                            myReader = myCommand.ExecuteReader();
-                            List<string[]> list = new List<string[]>();
-
-
-                            while (myReader.Read()) {
-                                list.Add(new string[] { myReader["Dept_ID"].ToString().ToUpper(), myReader["Description"].ToString() });
-                            }
-                            myReader.Close();
-
-                            i = 0;
-                            int all_count = 0;
-                            foreach (string[] item in list) {
-
-                                PdfPCell cell = new PdfPCell(new Paragraph(item[1].ToString(), header));
-                                cell.BackgroundColor = BaseColor.BLACK;
-                                cell.Colspan = 3;
-                                cell.HorizontalAlignment = 1; //0=Left, 1=Centre, 2=Right
-                                t.AddCell(cell);
-
-                                myCommand = new SqlCommand("SELECT ItemName,In_Stock,Vendor_Part_Num FROM Inventory WHERE In_Stock<1 AND IsDeleted = 'False' AND Dept_ID = '" + item[0] + "' ORDER BY Last_Sold",
-                                                                         myConnection);
-                                myReader = myCommand.ExecuteReader();
-
-                                int stock_count = 0;
-                                int j = 0;
-                                while (myReader.Read()) {
-                                    theCell = new PdfPCell(new Paragraph(myReader["ItemName"].ToString(), fontTinyReg));
-                                    t.AddCell(theCell);
-                                    theCell = new PdfPCell(new Paragraph(myReader["Vendor_Part_Num"].ToString(), fontTinyBold));
-                                    t.AddCell(theCell);
-                                    theCell = new PdfPCell(new Paragraph(myReader["In_Stock"].ToString(), fontTinyReg));
-                                    t.AddCell(theCell);
-
-                                    stock_count = stock_count + int.Parse(myReader["In_Stock"].ToString());
-                                    j++;
-                                    i++;
-                                }
-                                myReader.Close();
-
-                                cell = new PdfPCell(new Paragraph("Totals (products:" + j + ") --  " + stock_count + " items", header));
-                                cell.BackgroundColor = BaseColor.GRAY;
-                                cell.Colspan = 3;
-                                cell.HorizontalAlignment = 1; //0=Left, 1=Centre, 2=Right
-                                t.AddCell(cell);
-
-                                all_count = all_count + stock_count;
-
-                            }
-
-                            PdfPCell fcell = new PdfPCell(new Paragraph("Totals (products:" + i + ") --  " + all_count + " items", header));
-                            fcell.BackgroundColor = BaseColor.GRAY;
-                            fcell.Colspan = 3;
-                            fcell.HorizontalAlignment = 1; //0=Left, 1=Centre, 2=Right
-                            t.AddCell(fcell);
-
-                            //Add the table to our document 
-                            doc.Add(t);
-
-                            //Close our document 
-                            doc.Close();
-                        }
-                    }
-                }
-
-                Process mydoc = new Process();
-                mydoc.StartInfo.FileName = @"outofstock_" + date + ".pdf";
-                mydoc.Start();
-
-                mess = "done";
-                dlgRes = MessageBox.Show("Had " + i + "items including: \r\n" + mess + "\r\n\r\nEmail this?",
-                 "Confirm Document Close",
-                MessageBoxButtons.YesNoCancel,
-                 MessageBoxIcon.Question);
-
-
-                if (dlgRes == DialogResult.Yes) {
-                    MailMessage theMailMessage = new MailMessage("jeremybass26@gmail.com", "jeremybass@cableone.net");
-                    theMailMessage.Body = "body email message here \r\n MESSAGE \r\n" + mess;
-
-                    theMailMessage.Attachments.Add(new Attachment("outofstock_" + date + ".pdf"));
-                    theMailMessage.Subject = "Subject here";
-
-                    SmtpClient theClient = new SmtpClient("smtp.gmail.com", 587);
-                    theClient.EnableSsl = true;
-                    theClient.UseDefaultCredentials = false;
-                    theClient.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    theClient.Credentials = new System.Net.NetworkCredential("jeremybass26@gmail.com", "bA03s17s82!");
-                    theClient.Send(theMailMessage);
-                }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            } catch (Exception er) {
-
-                dlgRes = MessageBox.Show(er.ToString(), "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-
-
-            }
+            make_pdf(SQL_op, item_filter, outputFile);
         }
 
-        private void button3_Click(object sender, EventArgs e) {
-            SqlConnection myConnection = quries.create_concection();
-
+        private void stocklist_Click(object sender, EventArgs e) {
             DialogResult dlgRes = MessageBox.Show("Exculde Videos?",
                  "Options",
                 MessageBoxButtons.YesNoCancel,
@@ -281,8 +124,21 @@ namespace end_of_day {
                 SQL_op = " AND NOT Dept_ID = 'video'";
             }
 
-            String mess = "done";
-            try {
+            String item_filter = "In_Stock>0 AND IsDeleted = 'False'";
+
+            String date = DateTime.Now.ToShortDateString().Replace('\\', '-').Replace('/', '-');
+            string outputFile = @"instock_" + date + ".pdf";
+           
+            make_pdf(SQL_op,item_filter, outputFile);
+
+        }
+
+
+
+        private void make_pdf(String SQL_op, String item_filter, String outputFile) {
+             try {
+                SqlConnection myConnection = quries.create_concection();
+                String mess = "done";
                 //This is the absolute path to the PDF that we will create 
 
                 iTextSharp.text.Font fontTinyReg = FontFactory.GetFont("Arial", 6, iTextSharp.text.Font.NORMAL, BaseColor.BLACK);
@@ -292,8 +148,8 @@ namespace end_of_day {
                 BaseFont bfTimes = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, false);
 
                 iTextSharp.text.Font times = new iTextSharp.text.Font(bfTimes, 8);
-                String date = DateTime.Now.ToShortDateString().Replace('\\', '-').Replace('/', '-');
-                string outputFile = @"instock_" + date + ".pdf";//Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Sample.pdf"); 
+                //String date = DateTime.Now.ToShortDateString().Replace('\\', '-').Replace('/', '-');
+                //string outputFile = @"instock_" + date + ".pdf";//Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Sample.pdf"); 
                 int i = 0;
                 //Create a standard .Net FileStream for the file, setting various flags 
                 using (FileStream fs = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.None)) {
@@ -330,7 +186,7 @@ namespace end_of_day {
 
                             SqlDataReader myReader = null;
                             SqlCommand myCommand = new SqlCommand("SELECT Dept_ID,Description FROM Departments WHERE NOT Dept_ID = 'discount' " + SQL_op + "",
-                                         myConnection);
+                                            myConnection);
                             myReader = myCommand.ExecuteReader();
                             List<string[]> list = new List<string[]>();
 
@@ -344,8 +200,8 @@ namespace end_of_day {
                             int all_count = 0;
                             foreach (string[] item in list) {
 
-                                myCommand = new SqlCommand("SELECT ItemName,In_Stock,Vendor_Part_Num FROM Inventory WHERE In_Stock>0 AND IsDeleted = 'False' AND Dept_ID = '" + item[0] + "' ORDER BY Last_Sold",
-                                                                         myConnection);
+                                myCommand = new SqlCommand("SELECT ItemName,In_Stock,Vendor_Part_Num FROM Inventory WHERE " + item_filter + " AND Dept_ID = '" + item[0] + "' ORDER BY Last_Sold",
+                                                                            myConnection);
                                 myReader = myCommand.ExecuteReader();
 
                                 PdfPCell cell = new PdfPCell(new Paragraph(item[1].ToString(), header));
@@ -368,7 +224,7 @@ namespace end_of_day {
                                         stock_count = stock_count + int.Parse(myReader["In_Stock"].ToString());
                                     } catch (Exception er) {
                                         string count_er_mess = "This item " + myReader["ItemName"].ToString() + " has a qty that is not correct.  Write this down sku (" + myReader["Vendor_Part_Num"].ToString() + ") and address it before starting the inventory " + myReader["In_Stock"].ToString() + "\r\rSKU: " + myReader["Vendor_Part_Num"].ToString() + "\rStock:" + myReader["In_Stock"].ToString();
-                                        dlgRes = MessageBox.Show(count_er_mess + "\r\r\r [" + er.ToString() + "]", "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                                        MessageBox.Show(count_er_mess + "\r\r\r [" + er.ToString() + "]", "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                                     }
                                     j++;
                                     i++;
@@ -401,27 +257,22 @@ namespace end_of_day {
                 }
 
 
-
-
-
-
-
                 Process mydoc = new Process();
-                mydoc.StartInfo.FileName = @"instock_" + date + ".pdf";
+                mydoc.StartInfo.FileName = outputFile;
                 mydoc.Start();
 
                 mess = "done";
-                dlgRes = MessageBox.Show("Had " + i + "items including: \r\n" + mess + "\r\n\r\nEmail this?",
-                 "Confirm Document Close",
+                DialogResult dlgRes = MessageBox.Show("Had " + i + "items including: \r\n" + mess + "\r\n\r\nEmail this?",
+                    "Confirm Document Close",
                 MessageBoxButtons.YesNoCancel,
-                 MessageBoxIcon.Question);
+                    MessageBoxIcon.Question);
 
 
                 if (dlgRes == DialogResult.Yes) {
                     MailMessage theMailMessage = new MailMessage("jeremybass26@gmail.com", "jeremybass@cableone.net");
                     theMailMessage.Body = "body email message here \r\n MESSAGE \r\n" + mess;
 
-                    theMailMessage.Attachments.Add(new Attachment("instock_" + date + ".pdf"));
+                    theMailMessage.Attachments.Add(new Attachment(outputFile));
                     theMailMessage.Subject = "Subject here";
 
                     SmtpClient theClient = new SmtpClient("smtp.gmail.com", 587);
@@ -433,28 +284,13 @@ namespace end_of_day {
                     theClient.Credentials = new System.Net.NetworkCredential(username, pass);
                     theClient.Send(theMailMessage);
                 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             } catch (Exception er) {
-
-                dlgRes = MessageBox.Show(er.ToString(), "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-
-
+                MessageBox.Show(er.ToString(), "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
             }
         }
+
+
+
 
         private void button2_Click(object sender, EventArgs e) {
             SqlConnection myConnection = quries.create_concection();
