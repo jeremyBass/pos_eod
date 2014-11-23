@@ -34,7 +34,20 @@ namespace end_of_day {
     public partial class Form1 : Form {
 
         //private add_customer_form childForm = new add_customer_form(this);
+        public List<CheckBox> filters = new List<CheckBox>();
+        public static string CreateMD5(string input) {
+            // Use input string to calculate MD5 hash
+            MD5 md5 = System.Security.Cryptography.MD5.Create();
+            byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+            byte[] hashBytes = md5.ComputeHash(inputBytes);
 
+            // Convert the byte array to hexadecimal string
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < hashBytes.Length; i++) {
+                sb.Append(hashBytes[i].ToString("X2"));
+            }
+            return sb.ToString();
+        }    
         public Form1() {
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
                 string resourceName = new AssemblyName(args.Name).Name + ".dll";
@@ -48,7 +61,7 @@ namespace end_of_day {
             };
             InitializeComponent();
             this.Resize += new EventHandler(textBox1_TextChanged);
-
+            set_window_size();
 
             //this.FormBorderStyle = FormBorderStyle.None;
             //this.DoubleBuffered = true;
@@ -61,8 +74,13 @@ namespace end_of_day {
             webBrowser1.Height = this.flowLayoutPanel2.Height;
         }
 
-
-
+        private void set_window_size() {
+            set_window_size(this.btn_area.Height + 25);
+        }
+        private void set_window_size(int Size) {
+            this.ClientSize = new System.Drawing.Size(498, Size);
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+        }
 
         private const int cGrip = 16;      // Grip size 
         private const int cCaption = 25;   // Caption bar height; 
@@ -113,25 +131,93 @@ namespace end_of_day {
             make_pdf(SQL_op, item_filter, outputFile);
         }
 
-        private void stocklist_Click(object sender, EventArgs e) {
-            DialogResult dlgRes = MessageBox.Show("Exculde Videos?",
+        private void createfliterarea_Click(object sender, EventArgs e) {
+            SqlConnection myConnection = quries.create_concection();
+
+            SqlDataReader myReader = null;
+            SqlCommand myCommand = new SqlCommand("SELECT Dept_ID,Description FROM Departments WHERE NOT Dept_ID = 'discount' ",
+                            myConnection);
+            myReader = myCommand.ExecuteReader();
+            List<string[]> list = new List<string[]>();
+
+            while (myReader.Read()) {
+                list.Add(new string[] { myReader["Dept_ID"].ToString().ToUpper(), myReader["Description"].ToString() });
+            }
+            myReader.Close();
+            int i = 0;
+            foreach (string[] item in list) {
+                //add_items(item[0],item[1]);
+                
+                CheckBox chkBox = new CheckBox();
+                //chkBox.Location = new Point(p, q);
+                string checkName = "check" + item[1];
+                chkBox.Text = item[1];
+                chkBox.Checked = false;
+                chkBox.AccessibleName = checkName;
+                chkBox.Name = checkName;
+                chkBox.AccessibleName = item[0];
+                chkBox.CheckState = CheckState.Checked;
+                chkBox.Location = new System.Drawing.Point(0, 60 + (chkBox.Height * i) );
+                filters.Add(chkBox);
+                this.option_filters.Controls.Add(chkBox);
+                i++;
+            }
+
+            this.option_filters.Height = 60 + (20 * i);
+            this.stock_options.Show();
+            this.stock_options.Height = this.option_filters.Height + this.filterbtnarea.Height;
+            set_window_size(60 + this.btn_area.Height + this.stock_options.Height);
+        }
+
+
+        public void add_items(String id,String Text){
+
+        }
+
+
+
+         private void start_pdf_output(object sender, EventArgs e) {
+             String SQL_op = "";
+            /*DialogResult dlgRes = MessageBox.Show("Exculde Videos?",
                  "Options",
                 MessageBoxButtons.YesNoCancel,
                  MessageBoxIcon.Question);
 
-            String SQL_op = "";
+            
             if (dlgRes == DialogResult.Yes) {
                 SQL_op = " AND NOT Dept_ID = 'video'";
-            }
+            }*/
 
-            String item_filter = "In_Stock>0 AND IsDeleted = 'False'";
+             String item_filter = "";
+             String stockState = "";
+             if (outofstock.Checked) {
+                 //SQL_op = " AND NOT Dept_ID = 'video'";
+                 item_filter = "In_Stock<1 AND IsDeleted = 'False'";
+                 stockState = "outof";
+             } else {
+                 item_filter = "In_Stock>0 AND IsDeleted = 'False'";
+                 stockState = "in";
+             }
+
+             String filtering = "";
+             foreach (CheckBox filter in filters) {
+                 if (filter.Checked!=true) {
+                     filtering += (String.IsNullOrWhiteSpace(filtering)?"":",") + "'" +filter.AccessibleName+"'";
+                 }
+             }
+             if (!String.IsNullOrWhiteSpace(filtering)) {
+                 SQL_op = " AND Dept_ID NOT IN (" + filtering + ")";
+             }
+
+            String salt = CreateMD5(filtering);
 
             String date = DateTime.Now.ToShortDateString().Replace('\\', '-').Replace('/', '-');
-            string outputFile = @"instock_" + date + ".pdf";
+            string outputFile = stockState + "stock_" + date + "__" + salt + ".pdf";
            
             make_pdf(SQL_op,item_filter, outputFile);
 
         }
+
 
 
 
@@ -187,6 +273,7 @@ namespace end_of_day {
                             SqlDataReader myReader = null;
                             SqlCommand myCommand = new SqlCommand("SELECT Dept_ID,Description FROM Departments WHERE NOT Dept_ID = 'discount' " + SQL_op + "",
                                             myConnection);
+                            //MessageBox.Show("SELECT Dept_ID,Description FROM Departments WHERE NOT Dept_ID = 'discount' " + SQL_op + "", "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                             myReader = myCommand.ExecuteReader();
                             List<string[]> list = new List<string[]>();
 
@@ -199,9 +286,8 @@ namespace end_of_day {
                             i = 0;
                             int all_count = 0;
                             foreach (string[] item in list) {
-
-                                myCommand = new SqlCommand("SELECT ItemName,In_Stock,Vendor_Part_Num FROM Inventory WHERE " + item_filter + " AND Dept_ID = '" + item[0] + "' ORDER BY Last_Sold",
-                                                                            myConnection);
+                                //MessageBox.Show("SELECT ItemName,In_Stock,Vendor_Part_Num FROM Inventory WHERE " + item_filter + " AND Dept_ID = '" + item[0] + "' ORDER BY Last_Sold", "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                                myCommand = new SqlCommand("SELECT ItemName,In_Stock,Vendor_Part_Num FROM Inventory WHERE " + item_filter + " AND Dept_ID = '" + item[0] + "' ORDER BY Last_Sold", myConnection);
                                 myReader = myCommand.ExecuteReader();
 
                                 PdfPCell cell = new PdfPCell(new Paragraph(item[1].ToString(), header));
@@ -262,7 +348,7 @@ namespace end_of_day {
                 mydoc.Start();
 
                 mess = "done";
-                DialogResult dlgRes = MessageBox.Show("Had " + i + "items including: \r\n" + mess + "\r\n\r\nEmail this?",
+                /*DialogResult dlgRes = MessageBox.Show("Had " + i + "items including: \r\n" + mess + "\r\n\r\nEmail this?",
                     "Confirm Document Close",
                 MessageBoxButtons.YesNoCancel,
                     MessageBoxIcon.Question);
@@ -283,7 +369,13 @@ namespace end_of_day {
                     String pass = ConfigurationManager.AppSettings["email_pass"];
                     theClient.Credentials = new System.Net.NetworkCredential(username, pass);
                     theClient.Send(theMailMessage);
+                }*/
+                foreach (CheckBox filter in filters) {
+                    filter.Dispose();
                 }
+                filters = new List<CheckBox>();
+                this.stock_options.Hide();
+                set_window_size();
             } catch (Exception er) {
                 MessageBox.Show(er.ToString(), "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
             }
@@ -386,6 +478,8 @@ namespace end_of_day {
             if (dlgRes == DialogResult.No) {
                 var myValue = Microsoft.VisualBasic.Interaction.InputBox("What is the sku of the itme you wish to find", "Look product", "");
                 if (myValue != "") {
+                    webBrowser1.Visible = true;
+                    set_window_size(this.btn_area.Height + webBrowser1.Height + 25);
                     sendPost("&sku=" + myValue);
                 }
             }
@@ -417,6 +511,17 @@ namespace end_of_day {
             webBrowser1.Document.OpenNew(true);
             webBrowser1.Document.Write("<html><body>" + returnvalue + "</body></html>");
             webBrowser1.Stop();
+            set_window_size();
+        }
+
+        private void allfilter_CheckedChanged(object sender, EventArgs e) {
+            foreach (CheckBox filter in filters) {
+                if (allfilter.Checked) {
+                    filter.Checked = true;
+                } else {
+                    filter.Checked = false;
+                }
+            }
         }
 
 
